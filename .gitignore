@@ -1,0 +1,6 @@
+.config/*
+.vscode/*
+bin/*
+obj/*
+node_modules/*
+.env

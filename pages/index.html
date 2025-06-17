@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskAPI - Home</title>
+    
+    <!-- Material Design Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Design CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="blue darken-2">
+        <div class="nav-wrapper container">
+            <a href="#" class="brand-logo">
+                <i class="material-icons left">code</i>TaskAPI
+            </a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="#about">Acerca de</a></li>
+                <li><a href="#features">Características</a></li>
+                <li><a href="#docs" class="btn white blue-text waves-effect waves-light">Documentación</a></li>
+            </ul>
+            
+            <!-- Mobile menu trigger -->
+            <a href="#" data-target="mobile-demo" class="sidenav-trigger right">
+                <i class="material-icons">menu</i>
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Mobile Sidenav -->
+    <ul class="sidenav" id="mobile-demo">
+        <li><a href="#about">Acerca de</a></li>
+        <li><a href="#features">Características</a></li>
+        <li><a href="#docs">Documentación</a></li>
+    </ul>
+    
+    <!-- Hero Section -->
+    <section class="hero-section blue-grey lighten-5">
+        <div class="container">
+            <div class="row">
+                <div class="col s12 center-align">
+                    <div class="hero-content">
+                        <h1 class="hero-title blue-text text-darken-2">
+                            <i class="material-icons large">api</i><br>
+                            TaskAPI
+                        </h1>
+                        <h5 class="grey-text text-darken-2">API robusta para gestión de tareas</h5>
+                        <p class="flow-text grey-text text-darken-1">
+                            Una solución completa y escalable para la gestión de tareas con endpoints RESTful,
+                            autenticación segura y documentación detallada.
+                        </p>
+                        <div class="hero-buttons">
+                            <a href="#docs" class="btn-large blue darken-1 waves-effect waves-light">
+                                <i class="material-icons left">description</i>
+                                Ver Documentación
+                            </a>
+                            <a href="#features" class="btn-large blue-grey waves-effect waves-light">
+                                <i class="material-icons left">explore</i>
+                                Explorar Características
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col s12 center-align">
+                    <h3 class="blue-text text-darken-2">Acerca de TaskAPI</h3>
+                    <p class="flow-text grey-text text-darken-1">
+                        TaskAPI es una API RESTful moderna diseñada para facilitar la gestión de tareas
+                        en aplicaciones web y móviles. Construida con tecnologías de vanguardia,
+                        ofrece una experiencia de desarrollo fluida y eficiente.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features" class="section blue-grey lighten-5">
+        <div class="container">
+            <div class="row">
+                <div class="col s12 center-align">
+                    <h3 class="blue-text text-darken-2">Características Principales</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 m4">
+                    <div class="card hoverable">
+                        <div class="card-content center-align">
+                            <i class="material-icons large blue-text">security</i>
+                            <h5>Seguridad</h5>
+                            <p>Autenticación JWT robusta y validación de datos para proteger tu información.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m4">
+                    <div class="card hoverable">
+                        <div class="card-content center-align">
+                            <i class="material-icons large blue-text">speed</i>
+                            <h5>Rendimiento</h5>
+                            <p>Optimizada para respuestas rápidas y manejo eficiente de grandes volúmenes de datos.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col s12 m4">
+                    <div class="card hoverable">
+                        <div class="card-content center-align">
+                            <i class="material-icons large blue-text">code</i>
+                            <h5>RESTful</h5>
+                            <p>Endpoints bien estructurados siguiendo las mejores prácticas de APIs REST.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Documentation Section -->
+    <section id="docs" class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col s12 center-align">
+                    <h3 class="blue-text text-darken-2">Documentación</h3>
+                    <p class="flow-text grey-text text-darken-1">
+                        Accede a la documentación completa de la API para comenzar a integrar TaskAPI en tus proyectos.
+                    </p>
+                    <div class="documentation-card">
+                        <div class="card large">
+                            <div class="card-content">
+                                <div class="row">
+                                    <div class="col s12 m6">
+                                        <h5><i class="material-icons left">book</i>Guía de Inicio Rápido</h5>
+                                        <p>Aprende los conceptos básicos y realiza tu primera petición a la API en minutos.</p>
+                                        <a href="README.md" target="_blank" class="btn blue waves-effect waves-light">
+                                            <i class="material-icons left">launch</i>
+                                            Ver README
+                                        </a>
+                                    </div>
+                                    <div class="col s12 m6">
+                                        <h5><i class="material-icons left">api</i>Referencia de API</h5>
+                                        <p>Documentación detallada de todos los endpoints, parámetros y respuestas.</p>
+                                        <a href="#" class="btn blue-grey waves-effect waves-light" onclick="showApiDocs()">
+                                            <i class="material-icons left">description</i>
+                                            Ver API Docs
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col s12">
+                                        <div class="divider"></div>
+                                        <br>
+                                        <h6><i class="material-icons left">info</i>Información del Proyecto</h6>
+                                        <div class="chip">
+                                            <i class="material-icons tiny">code</i> Node.js + Express
+                                        </div>
+                                        <div class="chip">
+                                            <i class="material-icons tiny">storage</i> Base de datos
+                                        </div>
+                                        <div class="chip">
+                                            <i class="material-icons tiny">verified_user</i> JWT Auth
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="page-footer blue darken-2">
+        <div class="container">
+            <div class="row">
+                <div class="col s12 m6">
+                    <h5 class="white-text">TaskAPI</h5>
+                    <p class="grey-text text-lighten-4">
+                        API moderna para gestión de tareas. Construida con pasión por el desarrollo de calidad.
+                    </p>
+                </div>
+                <div class="col s12 m6">
+                    <h5 class="white-text">Enlaces Útiles</h5>
+                    <ul>
+                        <li><a class="white-text" href="README.md">Documentación</a></li>
+                        <li><a class="white-text" href="#features">Características</a></li>
+                        <li><a class="white-text" href="#about">Acerca de</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            <div class="container">
+                <span>© 2025 TaskAPI. Todos los derechos reservados.</span>
+                <a class="grey-text text-lighten-4 right" href="#docs">Ir a Documentación</a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Material Design JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
+
