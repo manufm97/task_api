@@ -5,7 +5,6 @@ require('dotenv').config();
  * @type { Object.<string, import("knex").Knex.Config> }
  */
 module.exports = {
-
   development: {
     client: process.env.DB_DRIVER || 'mysql',
     connection: {
@@ -72,5 +71,4 @@ module.exports = {
       directory: './seeds'
     }
   }
-
 };

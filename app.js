@@ -20,7 +20,7 @@ const swaggerOptions = {
       description: 'A simple Task Management API',
       contact: {
         name: 'API Support',
-        email: 'support@taskapi.com'
+        email: 'manufm97@gmail.com'
       },
     },
     servers: [
@@ -41,8 +41,14 @@ app.use(express.json())
 // Serve static files (CSS, JS, images, etc.)
 app.use(express.static(path.join(__dirname)))
 
+// Import routes
+const tasksRoutes = require('./routes/tasks')
+
 // Swagger middleware
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
+
+// API routes
+app.use('/api/tasks', tasksRoutes)
 
 /**
  * @swagger
@@ -60,12 +66,12 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
  *               example: 'TaskAPI Homepage'
  */
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'pages/index.html'))
+  res.sendFile(path.join(__dirname, 'pages/index.html'))
 })
 
 /**
  * @swagger
- * /health:
+ * /ping:
  *   get:
  *     summary: Health check
  *     description: Returns the health status of the API
@@ -87,57 +93,24 @@ app.get('/', (req, res) => {
  *                   type: string
  *                   example: 'development'
  */
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        environment: ENVIRONMENT
-    })
+app.get('/ping', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: ENVIRONMENT
+  })
 })
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Task:
- *       type: object
- *       required:
- *         - id
- *         - title
- *         - completed
- *       properties:
- *         id:
- *           type: integer
- *           description: The auto-generated id of the task
- *         title:
- *           type: string
- *           description: The title of the task
- *         description:
- *           type: string
- *           description: The description of the task
- *         completed:
- *           type: boolean
- *           description: Whether the task is completed
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: The date the task was created
- *       example:
- *         id: 1
- *         title: 'Complete project documentation'
- *         description: 'Write comprehensive documentation for the project'
- *         completed: false
- *         createdAt: '2023-06-17T10:30:00Z'
- */
+// Catch-all route for 404 errors
 
 app.use((req, res) => {
-    res.status(404).send('<h1>Error 404 Not Found</h1>')
+  res.sendFile(path.join(__dirname, 'pages/404.html'))
 })
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`)
-    console.log(`📚 Swagger Documentation: http://localhost:${PORT}/api-docs`)
-    console.log(`📊 Environment: ${ENVIRONMENT}`)
-    console.log(`🗄️  Database: ${process.env.DB_DRIVER || 'Not configured'}`)
-    console.log(`🔗 Database Host: ${process.env.DB_HOST || 'Not configured'}`)
+  console.log(`🚀 Server is running on http://localhost:${PORT}`)
+  console.log(`📚 Swagger Documentation: http://localhost:${PORT}/api-docs`)
+  console.log(`📊 Environment: ${ENVIRONMENT}`)
+  console.log(`🗄️  Database: ${process.env.DB_DRIVER || 'Not configured'}`)
+  console.log(`🔗 Database Host: ${process.env.DB_HOST || 'Not configured'}`)
 })
