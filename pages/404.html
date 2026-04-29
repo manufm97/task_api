@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskAPI - Home</title>
-    
+    <title>TaskAPI - 404</title>
+
     <!-- Material Design Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+
     <!-- Material Design CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="pages/css/styles.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="blue darken-2">
@@ -25,27 +27,33 @@
                 <i class="material-icons left">code</i>TaskAPI
             </a>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a href="#about">Acerca de</a></li>
-                <li><a href="#features">Características</a></li>
-                <li><a href="#docs" class="btn white blue-text waves-effect waves-light">Documentación</a></li>
+                <li><a href="#about" hx-get="/content/about" hx-target="#docs-content" hx-trigger="click">Acerca de</a>
+                </li>
+                <li><a href="#features" hx-get="/content/features" hx-target="#docs-content"
+                        hx-trigger="click">Características</a></li>
+                <li><a href="#docs" class="btn white blue-text waves-effect waves-light" hx-get="/content/docs"
+                        hx-target="#docs-content" hx-trigger="click">Documentación</a></li>
+                <li><a href="/api-docs" class="btn white blue-text waves-effect waves-light" hx-get="/api-docs"
+                        hx-target="#docs-content" hx-trigger="click">Swagger</a></li>
             </ul>
-            
+
             <!-- Mobile menu trigger -->
             <a href="#" data-target="mobile-demo" class="sidenav-trigger right">
                 <i class="material-icons">menu</i>
             </a>
         </div>
     </nav>
-    
+
     <!-- Mobile Sidenav -->
     <ul class="sidenav" id="mobile-demo">
         <li><a href="#about">Acerca de</a></li>
         <li><a href="#features">Características</a></li>
         <li><a href="#docs">Documentación</a></li>
     </ul>
-    
+
+    <!-- Dynamic Content Area -->
     <section id="dynamic-content" class="section">
-        <div class="container center-align">
+        <div class="container">
             <div id="docs-content" class="row">
                 <h1 class="hero-title blue-text text-darken-2">
                     <i class="material-icons large">api</i><br>
@@ -54,7 +62,7 @@
             </div>
         </div>
     </section>
-    
+
     <!-- Footer -->
     <footer class="page-footer blue darken-2">
         <div class="container">
@@ -68,7 +76,6 @@
                 <div class="col s12 m6">
                     <h5 class="white-text">Enlaces Útiles</h5>
                     <ul>
-                        <li><a class="white-text" href="/api-docs">Swagger</a></li>
                         <li><a class="white-text" href="README.md">Documentación</a></li>
                         <li><a class="white-text" href="#features">Características</a></li>
                         <li><a class="white-text" href="#about">Acerca de</a></li>
@@ -83,12 +90,15 @@
             </div>
         </div>
     </footer>
-    
+
+    <!-- HTMX Library -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
     <!-- Material Design JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-    
+
     <!-- Custom JavaScript -->
     <script src="pages/js/index.js"></script>
 </body>
-</html>
 
+</html>

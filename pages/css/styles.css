@@ -1,13 +1,194 @@
 /* Custom styles for TaskAPI Homepage */
 
+/* CSS Variables for theming */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #eeeeee;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --border-color: #e0e0e0;
+    --code-bg: #f5f5f5;
+    --code-text: #c62828;
+    --pre-bg: #263238;
+    --pre-text: #eceff1;
+    --blockquote-bg: #e3f2fd;
+    --blockquote-border: #1976d2;
+    --table-header-bg: #e3f2fd;
+    --table-row-alt: #f9f9f9;
+    --heading-color: #1565c0;
+    --link-color: #1976d2;
+    --card-hover-shadow: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --bg-tertiary: #2c2c2c;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #808080;
+    --border-color: #333333;
+    --code-bg: #2c2c2c;
+    --code-text: #ff8a80;
+    --pre-bg: #1a1a2e;
+    --pre-text: #e0e0e0;
+    --blockquote-bg: #1e3a5f;
+    --blockquote-border: #42a5f5;
+    --table-header-bg: #1e3a5f;
+    --table-row-alt: #1a1a1a;
+    --heading-color: #42a5f5;
+    --link-color: #42a5f5;
+    --card-hover-shadow: rgba(0, 0, 0, 0.4);
+}
+
 /* General styles */
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Roboto', sans-serif;
     line-height: 1.6;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.modal-open {
+    overflow: hidden !important;
+    padding-right: 0 !important;
 }
 
 a {
     text-decoration: none;
+}
+
+/* Dark mode toggle */
+.theme-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.theme-toggle .material-icons {
+    font-size: 28px;
+}
+
+[data-theme="light"] .theme-toggle {
+    background: #1565c0;
+    color: #fff;
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: #42a5f5;
+    color: #121212;
+}
+
+/* Dark mode body and sections */
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .hero-section {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .section {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .section.blue-grey {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .card {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .card .card-content {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .documentation-card .card {
+    background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .chip {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] footer.page-footer {
+    background-color: #0d47a1 !important;
+}
+
+[data-theme="dark"] nav.blue.darken-2,
+[data-theme="dark"] nav,
+[data-theme="dark"] .nav-wrapper {
+    background-color: #0d47a1 !important;
+}
+
+[data-theme="dark"] .sidenav {
+    background-color: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .sidenav li > a {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .divider {
+    background-color: var(--border-color);
+}
+
+/* Dark mode modal */
+[data-theme="dark"] #readme-modal,
+[data-theme="dark"] #api-docs-modal {
+    background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .modal {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .readme-modal-header {
+    border-bottom-color: #42a5f5;
+}
+
+[data-theme="dark"] .modal-footer {
+    background-color: var(--bg-secondary);
+}
+
+/* Modal overlay fixes */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+}
+
+[data-theme="dark"] .modal-footer {
+    background-color: var(--bg-secondary);
 }
 
 /* Hero Section */
@@ -81,6 +262,7 @@ a {
 .card.hoverable:hover {
     transform: translateY(-5px);
     transition: all 0.3s ease;
+    box-shadow: 0 8px 16px var(--card-hover-shadow);
 }
 
 .card .material-icons.large {
@@ -211,8 +393,220 @@ button:focus,
     }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    /* This would be implemented if dark mode is desired */
+/* README Modal - Single scroll, fixed header & footer */
+.modal.modal-fixed-footer.readme-modal {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    padding: 0;
+    overflow: hidden;
+}
+
+.readme-modal-header {
+    flex-shrink: 0;
+    padding: 20px 30px;
+    border-bottom: 2px solid #1976d2;
+    background-color: inherit;
+}
+
+.readme-modal-header h4 {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Override Materialize modal-fixed-footer scroll on modal-content */
+.modal.modal-fixed-footer.readme-modal .modal-content {
+    flex: 1;
+    overflow: hidden !important;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    max-height: none !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.modal.modal-fixed-footer.readme-modal .modal-content::-webkit-scrollbar {
+    display: none;
+}
+
+.modal.modal-fixed-footer.readme-modal .modal-footer {
+    flex-shrink: 0;
+}
+
+.readme-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px 30px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Custom scrollbar for readme content */
+.readme-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.readme-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.readme-content::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 4px;
+}
+
+.readme-content::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+[data-theme="dark"] .readme-content::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+[data-theme="dark"] .readme-content::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+.readme-rendered {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.8;
+    color: var(--text-primary);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.readme-rendered pre {
+    background-color: var(--pre-bg);
+    color: var(--pre-text);
+    padding: 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 16px 0;
+    line-height: 1.5;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.readme-rendered table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    max-width: 100%;
+}
+
+.readme-rendered code {
+    background-color: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: var(--code-text);
+    word-break: break-all;
+}
+
+.readme-rendered h1,
+.readme-rendered h2,
+.readme-rendered h3,
+.readme-rendered h4,
+.readme-rendered h5,
+.readme-rendered h6 {
+    color: var(--heading-color);
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+.readme-rendered h1 {
+    font-size: 2rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.readme-rendered h2 {
+    font-size: 1.5rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.readme-rendered h3 {
+    font-size: 1.25rem;
+}
+
+.readme-rendered p {
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.readme-rendered a {
+    color: var(--link-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.readme-rendered a:hover {
+    border-bottom-color: var(--link-color);
+}
+
+.readme-rendered pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85rem;
+}
+
+.readme-rendered ul,
+.readme-rendered ol {
+    padding-left: 24px;
+    margin-bottom: 16px;
+}
+
+.readme-rendered li {
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.readme-rendered blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    padding: 12px 20px;
+    margin: 16px 0;
+    background-color: var(--blockquote-bg);
+    border-radius: 0 4px 4px 0;
+    color: var(--text-secondary);
+}
+
+.readme-rendered hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 24px 0;
+}
+
+.readme-rendered strong {
+    color: var(--heading-color);
+}
+
+.readme-rendered th,
+.readme-rendered td {
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    text-align: left;
+    color: var(--text-primary);
+}
+
+.readme-rendered th {
+    background-color: var(--table-header-bg);
+    font-weight: 500;
+    color: var(--heading-color);
+}
+
+.readme-rendered tr:nth-child(even) {
+    background-color: var(--table-row-alt);
+}
+
+.readme-rendered em {
+    color: var(--text-secondary);
 }
 

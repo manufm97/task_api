@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const crypto = require('crypto');
+
+let tasks = [];
 
 /**
  * @swagger
@@ -64,13 +67,11 @@ router.get('/', (req, res) => {
 
 		let filteredTasks = tasks;
 
-		// Filtrar por estado de completado si se especifica
 		if (completed !== undefined) {
 			const isCompleted = completed === 'true';
 			filteredTasks = tasks.filter(task => task.completed === isCompleted);
 		}
 
-		// Calcular paginación
 		const startIndex = (page - 1) * limit;
 		const endIndex = startIndex + limit;
 		const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
@@ -99,18 +100,19 @@ router.get('/', (req, res) => {
 
 /**
  * @swagger
- * /api/tasks/{id}:
+ * /api/tasks/{guid}:
  *   get:
- *     summary: Obtener una tarea por ID
- *     description: Retorna una tarea específica por su ID
+ *     summary: Obtener una tarea por GUID
+ *     description: Retorna una tarea específica por su GUID
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: guid
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID de la tarea
+ *           type: string
+ *           format: uuid
+ *         description: GUID de la tarea
  *     responses:
  *       200:
  *         description: Tarea encontrada
@@ -135,18 +137,11 @@ router.get('/', (req, res) => {
  *                 message:
  *                   type: string
  */
-router.get('/:id', (req, res) => {
+router.get('/:guid', (req, res) => {
 	try {
-		const id = parseInt(req.params.id);
+		const { guid } = req.params;
 
-		if (isNaN(id)) {
-			return res.status(400).json({
-				success: false,
-				message: 'ID inválido'
-			});
-		}
-
-		const task = tasks.find(t => t.id === id);
+		const task = tasks.find(t => t.id === guid);
 
 		if (!task) {
 			return res.status(404).json({
@@ -235,7 +230,6 @@ router.post('/', (req, res) => {
 	try {
 		const { title, description, completed } = req.body;
 
-		// Validaciones
 		const errors = [];
 
 		if (!title || title.trim() === '') {
@@ -256,9 +250,8 @@ router.post('/', (req, res) => {
 			});
 		}
 
-		// Crear nueva tarea
 		const newTask = {
-			id: nextId++,
+			id: crypto.randomUUID(),
 			title: title.trim(),
 			description: description ? description.trim() : '',
 			completed: completed || false,
@@ -284,18 +277,19 @@ router.post('/', (req, res) => {
 
 /**
  * @swagger
- * /api/tasks/{id}:
+ * /api/tasks/{guid}:
  *   put:
  *     summary: Actualizar una tarea completa
  *     description: Actualiza todos los campos de una tarea existente
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: guid
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID de la tarea
+ *           type: string
+ *           format: uuid
+ *         description: GUID de la tarea
  *     requestBody:
  *       required: true
  *       content:
@@ -333,18 +327,11 @@ router.post('/', (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-router.put('/:id', (req, res) => {
+router.put('/:guid', (req, res) => {
 	try {
-		const id = parseInt(req.params.id);
+		const { guid } = req.params;
 
-		if (isNaN(id)) {
-			return res.status(400).json({
-				success: false,
-				message: 'ID inválido'
-			});
-		}
-
-		const taskIndex = tasks.findIndex(t => t.id === id);
+		const taskIndex = tasks.findIndex(t => t.id === guid);
 
 		if (taskIndex === -1) {
 			return res.status(404).json({
@@ -355,7 +342,6 @@ router.put('/:id', (req, res) => {
 
 		const { title, description, completed } = req.body;
 
-		// Validaciones
 		const errors = [];
 
 		if (!title || title.trim() === '') {
@@ -376,7 +362,6 @@ router.put('/:id', (req, res) => {
 			});
 		}
 
-		// Actualizar tarea
 		tasks[taskIndex] = {
 			...tasks[taskIndex],
 			title: title.trim(),
@@ -401,18 +386,19 @@ router.put('/:id', (req, res) => {
 
 /**
  * @swagger
- * /api/tasks/{id}:
+ * /api/tasks/{guid}:
  *   patch:
  *     summary: Actualizar parcialmente una tarea
  *     description: Actualiza solo los campos especificados de una tarea
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: guid
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID de la tarea
+ *           type: string
+ *           format: uuid
+ *         description: GUID de la tarea
  *     requestBody:
  *       required: true
  *       content:
@@ -437,18 +423,11 @@ router.put('/:id', (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-router.patch('/:id', (req, res) => {
+router.patch('/:guid', (req, res) => {
 	try {
-		const id = parseInt(req.params.id);
+		const { guid } = req.params;
 
-		if (isNaN(id)) {
-			return res.status(400).json({
-				success: false,
-				message: 'ID inválido'
-			});
-		}
-
-		const taskIndex = tasks.findIndex(t => t.id === id);
+		const taskIndex = tasks.findIndex(t => t.id === guid);
 
 		if (taskIndex === -1) {
 			return res.status(404).json({
@@ -459,7 +438,6 @@ router.patch('/:id', (req, res) => {
 
 		const { title, description, completed } = req.body;
 
-		// Validaciones para campos presentes
 		const errors = [];
 
 		if (title !== undefined) {
@@ -482,7 +460,6 @@ router.patch('/:id', (req, res) => {
 			});
 		}
 
-		// Actualizar solo los campos proporcionados
 		const updateData = { updatedAt: new Date() };
 
 		if (title !== undefined) updateData.title = title.trim();
@@ -507,18 +484,19 @@ router.patch('/:id', (req, res) => {
 
 /**
  * @swagger
- * /api/tasks/{id}:
+ * /api/tasks/{guid}:
  *   delete:
  *     summary: Eliminar una tarea
  *     description: Elimina una tarea específica del sistema
  *     tags: [Tasks]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: guid
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID de la tarea a eliminar
+ *           type: string
+ *           format: uuid
+ *         description: GUID de la tarea a eliminar
  *     responses:
  *       200:
  *         description: Tarea eliminada exitosamente
@@ -534,20 +512,13 @@ router.patch('/:id', (req, res) => {
  *       404:
  *         description: Tarea no encontrada
  *       400:
- *         description: ID inválido
+ *         description: GUID inválido
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:guid', (req, res) => {
 	try {
-		const id = parseInt(req.params.id);
+		const { guid } = req.params;
 
-		if (isNaN(id)) {
-			return res.status(400).json({
-				success: false,
-				message: 'ID inválido'
-			});
-		}
-
-		const taskIndex = tasks.findIndex(t => t.id === id);
+		const taskIndex = tasks.findIndex(t => t.id === guid);
 
 		if (taskIndex === -1) {
 			return res.status(404).json({
@@ -573,4 +544,3 @@ router.delete('/:id', (req, res) => {
 });
 
 module.exports = router;
-

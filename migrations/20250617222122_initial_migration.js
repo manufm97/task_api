@@ -6,6 +6,7 @@ exports.up = function (knex) {
 	return knex.schema
 		.createTable('users', (table) => {
 			table.string('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('user_name').notNullable();
 			table.string('first_name').notNullable();
 			table.string('last_name_1').notNullable();
@@ -19,6 +20,7 @@ exports.up = function (knex) {
 
 		.createTable('priorities', (table) => {
 			table.increments('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('description').notNullable();
 			table.string('color').notNullable();
 			table.timestamp('created_at').defaultTo(knex.fn.now());
@@ -27,6 +29,7 @@ exports.up = function (knex) {
 
 		.createTable('statuses', (table) => {
 			table.increments('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('description').notNullable();
 			table.string('color').notNullable();
 			table.timestamp('created_at').defaultTo(knex.fn.now());
@@ -35,6 +38,7 @@ exports.up = function (knex) {
 
 		.createTable('tasks', (table) => {
 			table.string('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('title').notNullable();
 			table.text('description');
 			table.integer('priority_id').unsigned().references('id').inTable('priorities').onDelete('SET NULL');
@@ -44,6 +48,7 @@ exports.up = function (knex) {
 
 		.createTable('task_status_history', (table) => {
 			table.increments('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('task_id').references('id').inTable('tasks').onDelete('CASCADE');
 			table.integer('status_id').unsigned().references('id').inTable('statuses').onDelete('SET NULL');
 			table.string('user_id').references('id').inTable('users').onDelete('SET NULL');
@@ -53,6 +58,7 @@ exports.up = function (knex) {
 
 		.createTable('task_comments', (table) => {
 			table.string('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('task_id').references('id').inTable('tasks').onDelete('CASCADE');
 			table.string('user_id').references('id').inTable('users').onDelete('SET NULL');
 			table.text('comment').notNullable();
@@ -62,6 +68,7 @@ exports.up = function (knex) {
 
 		.createTable('task_attachments', (table) => {
 			table.string('id').primary();
+			table.string('guid').notNullable().unique();
 			table.string('task_id').references('id').inTable('tasks').onDelete('CASCADE');
 			table.string('user_id').references('id').inTable('users').onDelete('SET NULL');
 			table.string('file_name').notNullable();

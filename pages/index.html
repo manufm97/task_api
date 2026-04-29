@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -147,7 +147,7 @@
                                     <div class="col s12 m6">
                                         <h5><i class="material-icons left">book</i>Guía de Inicio Rápido</h5>
                                         <p>Aprende los conceptos básicos y realiza tu primera petición a la API en minutos.</p>
-                                        <a href="README.md" target="_blank" class="btn blue waves-effect waves-light">
+                                        <a href="#" class="btn blue waves-effect waves-light" onclick="showReadmeModal(); return false;">
                                             <i class="material-icons left">launch</i>
                                             Ver README
                                         </a>
@@ -185,6 +185,42 @@
         </div>
     </section>
     
+    <!-- README Modal -->
+    <div id="readme-modal" class="modal modal-fixed-footer readme-modal">
+        <div class="readme-modal-header">
+            <h4><i class="material-icons left">menu_book</i>TaskAPI - README</h4>
+        </div>
+        <div class="modal-content">
+            <div id="readme-content" class="readme-content">
+                <div class="center-align" style="padding: 40px;">
+                    <div class="preloader-wrapper big active">
+                        <div class="spinner-layer spinner-blue">
+                            <div class="circle-clipper left"><div class="circle"></div></div>
+                        </div>
+                        <div class="spinner-layer spinner-red">
+                            <div class="circle-clipper left"><div class="circle"></div></div>
+                        </div>
+                        <div class="spinner-layer spinner-yellow">
+                            <div class="circle-clipper left"><div class="circle"></div></div>
+                        </div>
+                        <div class="spinner-layer spinner-green">
+                            <div class="circle-clipper left"><div class="circle"></div></div>
+                        </div>
+                    </div>
+                    <p class="grey-text">Cargando README...</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close btn blue waves-effect waves-light">Cerrar</a>
+        </div>
+    </div>
+    
+    <!-- Dark Mode Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <i class="material-icons">dark_mode</i>
+    </button>
+    
     <!-- Footer -->
     <footer class="page-footer blue darken-2">
         <div class="container">
@@ -216,6 +252,9 @@
     
     <!-- Material Design JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <!-- Custom JavaScript -->
     <script src="pages/js/index.js"></script>

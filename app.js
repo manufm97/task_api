@@ -17,7 +17,7 @@ const swaggerOptions = {
     info: {
       title: 'Task API',
       version: '1.0.0',
-      description: 'A simple Task Management API',
+      description: 'Una API para la gestión de tareas con documentación Swagger y una interfaz de usuario basada en Material Design.',
       contact: {
         name: 'API Support',
         email: 'manufm97@gmail.com'
@@ -35,6 +35,8 @@ const swaggerOptions = {
 
 const specs = swaggerJsdoc(swaggerOptions)
 
+const fs = require('fs')
+
 app.disable('x-powered-by')
 app.use(express.json())
 
@@ -43,12 +45,14 @@ app.use(express.static(path.join(__dirname)))
 
 // Import routes
 const tasksRoutes = require('./routes/tasks')
+const usersRoutes = require('./routes/users')
 
 // Swagger middleware
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
 
 // API routes
 app.use('/api/tasks', tasksRoutes)
+app.use('/api/users', usersRoutes)
 
 /**
  * @swagger
@@ -98,6 +102,30 @@ app.get('/ping', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     environment: ENVIRONMENT
+  })
+})
+
+/**
+ * @swagger
+ * /api/readme:
+ *   get:
+ *     summary: Get README markdown
+ *     description: Returns the README.md file content as markdown
+ *     responses:
+ *       200:
+ *         description: README content
+ *         content:
+ *           text/markdown:
+ *             schema:
+ *               type: string
+ */
+app.get('/api/readme', (req, res) => {
+  const readmePath = path.join(__dirname, 'README.md')
+  fs.readFile(readmePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ success: false, message: 'Error reading README' })
+    }
+    res.type('text/markdown').send(data)
   })
 })
 
