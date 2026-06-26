@@ -3,7 +3,11 @@ const router = express.Router();
 const db = require('../config/database');
 const crypto = require('crypto');
 
-let tasks = [];
+function mapTask(task) {
+	if (!task) return null;
+	const { created_at, updated_at, ...rest } = task;
+	return { ...rest, createdAt: created_at, updatedAt: updated_at };
+}
 
 /**
  * @swagger
@@ -29,10 +33,10 @@ let tasks = [];
  *           default: 10
  *         description: Número de tareas por página
  *       - in: query
- *         name: completed
+ *         name: priority_id
  *         schema:
- *           type: boolean
- *         description: Filtrar por estado de completado
+ *           type: integer
+ *         description: Filtrar por prioridad
  *     responses:
  *       200:
  *         description: Lista de tareas obtenida exitosamente
@@ -59,42 +63,36 @@ let tasks = [];
  *                     totalPages:
  *                       type: integer
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 		const page = parseInt(req.query.page) || 1;
 		const limit = parseInt(req.query.limit) || 10;
-		const completed = req.query.completed;
+		const priority_id = req.query.priority_id;
 
-		let filteredTasks = tasks;
+		let query = db('tasks');
+		let countQuery = db('tasks');
 
-		if (completed !== undefined) {
-			const isCompleted = completed === 'true';
-			filteredTasks = tasks.filter(task => task.completed === isCompleted);
+		if (priority_id !== undefined) {
+			const pid = parseInt(priority_id);
+			query = query.where('priority_id', pid);
+			countQuery = countQuery.where('priority_id', pid);
 		}
 
-		const startIndex = (page - 1) * limit;
-		const endIndex = startIndex + limit;
-		const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+		const [{ count }] = await countQuery.count('* as count');
+		const total = Number(count);
 
-		const total = filteredTasks.length;
-		const totalPages = Math.ceil(total / limit);
+		const rows = await query
+			.offset((page - 1) * limit)
+			.limit(limit)
+			.orderBy('created_at', 'desc');
 
 		res.status(200).json({
 			success: true,
-			data: paginatedTasks,
-			pagination: {
-				page,
-				limit,
-				total,
-				totalPages
-			}
+			data: rows.map(mapTask),
+			pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
 		});
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -137,29 +135,18 @@ router.get('/', (req, res) => {
  *                 message:
  *                   type: string
  */
-router.get('/:guid', (req, res) => {
+router.get('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
-
-		const task = tasks.find(t => t.id === guid);
+		const task = await db('tasks').where({ guid }).first();
 
 		if (!task) {
-			return res.status(404).json({
-				success: false,
-				message: 'Tarea no encontrada'
-			});
+			return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
 		}
 
-		res.status(200).json({
-			success: true,
-			data: task
-		});
+		res.status(200).json({ success: true, data: mapTask(task) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -188,14 +175,13 @@ router.get('/:guid', (req, res) => {
  *                 type: string
  *                 maxLength: 1000
  *                 description: Descripción de la tarea
- *               completed:
- *                 type: boolean
- *                 default: false
- *                 description: Estado de completado
+ *               priority_id:
+ *                 type: integer
+ *                 description: ID de la prioridad
  *             example:
  *               title: "Nueva tarea"
  *               description: "Descripción de la nueva tarea"
- *               completed: false
+ *               priority_id: 1
  *     responses:
  *       201:
  *         description: Tarea creada exitosamente
@@ -226,9 +212,9 @@ router.get('/:guid', (req, res) => {
  *                   items:
  *                     type: string
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
 	try {
-		const { title, description, completed } = req.body;
+		const { title, description, priority_id } = req.body;
 
 		const errors = [];
 
@@ -243,35 +229,29 @@ router.post('/', (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		const newTask = {
-			id: crypto.randomUUID(),
-			title: title.trim(),
-			description: description ? description.trim() : '',
-			completed: completed || false,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		};
+		const guid = crypto.randomUUID();
 
-		tasks.push(newTask);
+		await db('tasks').insert({
+			guid,
+			title: title.trim(),
+			description: description ? description.trim() : null,
+			priority_id: priority_id || null,
+			created_at: db.fn.now(),
+			updated_at: db.fn.now(),
+		});
+
+		const task = await db('tasks').where({ guid }).first();
 
 		res.status(201).json({
 			success: true,
 			message: 'Tarea creada exitosamente',
-			data: newTask
+			data: mapTask(task),
 		});
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -306,8 +286,8 @@ router.post('/', (req, res) => {
  *               description:
  *                 type: string
  *                 maxLength: 1000
- *               completed:
- *                 type: boolean
+ *               priority_id:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Tarea actualizada exitosamente
@@ -327,20 +307,16 @@ router.post('/', (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-router.put('/:guid', (req, res) => {
+router.put('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
+		const { title, description, priority_id } = req.body;
 
-		const taskIndex = tasks.findIndex(t => t.id === guid);
+		const existing = await db('tasks').where({ guid }).first();
 
-		if (taskIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Tarea no encontrada'
-			});
+		if (!existing) {
+			return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
 		}
-
-		const { title, description, completed } = req.body;
 
 		const errors = [];
 
@@ -355,32 +331,21 @@ router.put('/:guid', (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		tasks[taskIndex] = {
-			...tasks[taskIndex],
+		await db('tasks').where({ guid }).update({
 			title: title.trim(),
-			description: description ? description.trim() : '',
-			completed: completed !== undefined ? completed : tasks[taskIndex].completed,
-			updatedAt: new Date()
-		};
+			description: description ? description.trim() : null,
+			priority_id: priority_id !== undefined ? priority_id : existing.priority_id,
+			updated_at: db.fn.now(),
+		});
 
-		res.status(200).json({
-			success: true,
-			message: 'Tarea actualizada exitosamente',
-			data: tasks[taskIndex]
-		});
+		const task = await db('tasks').where({ guid }).first();
+
+		res.status(200).json({ success: true, message: 'Tarea actualizada exitosamente', data: mapTask(task) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -413,8 +378,8 @@ router.put('/:guid', (req, res) => {
  *               description:
  *                 type: string
  *                 maxLength: 1000
- *               completed:
- *                 type: boolean
+ *               priority_id:
+ *                 type: integer
  *     responses:
  *       200:
  *         description: Tarea actualizada exitosamente
@@ -423,20 +388,16 @@ router.put('/:guid', (req, res) => {
  *       400:
  *         description: Datos inválidos
  */
-router.patch('/:guid', (req, res) => {
+router.patch('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
+		const { title, description, priority_id } = req.body;
 
-		const taskIndex = tasks.findIndex(t => t.id === guid);
+		const existing = await db('tasks').where({ guid }).first();
 
-		if (taskIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Tarea no encontrada'
-			});
+		if (!existing) {
+			return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
 		}
-
-		const { title, description, completed } = req.body;
 
 		const errors = [];
 
@@ -453,32 +414,22 @@ router.patch('/:guid', (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		const updateData = { updatedAt: new Date() };
+		const updateData = { updated_at: db.fn.now() };
 
 		if (title !== undefined) updateData.title = title.trim();
 		if (description !== undefined) updateData.description = description.trim();
-		if (completed !== undefined) updateData.completed = completed;
+		if (priority_id !== undefined) updateData.priority_id = priority_id;
 
-		tasks[taskIndex] = { ...tasks[taskIndex], ...updateData };
+		await db('tasks').where({ guid }).update(updateData);
 
-		res.status(200).json({
-			success: true,
-			message: 'Tarea actualizada exitosamente',
-			data: tasks[taskIndex]
-		});
+		const task = await db('tasks').where({ guid }).first();
+
+		res.status(200).json({ success: true, message: 'Tarea actualizada exitosamente', data: mapTask(task) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -514,32 +465,21 @@ router.patch('/:guid', (req, res) => {
  *       400:
  *         description: GUID inválido
  */
-router.delete('/:guid', (req, res) => {
+router.delete('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
 
-		const taskIndex = tasks.findIndex(t => t.id === guid);
+		const task = await db('tasks').where({ guid }).first();
 
-		if (taskIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Tarea no encontrada'
-			});
+		if (!task) {
+			return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
 		}
 
-		const deletedTask = tasks.splice(taskIndex, 1)[0];
+		await db('tasks').where({ guid }).del();
 
-		res.status(200).json({
-			success: true,
-			message: 'Tarea eliminada exitosamente',
-			data: deletedTask
-		});
+		res.status(200).json({ success: true, message: 'Tarea eliminada exitosamente', data: mapTask(task) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 

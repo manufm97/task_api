@@ -1,4 +1,4 @@
-# Task API 🚀
+# Task API
 
 Una API REST simple para gestión de tareas construida con Node.js, Express y Knex.js.
 
@@ -26,7 +26,7 @@ Una API REST simple para gestión de tareas construida con Node.js, Express y Kn
 ## 📋 Requisitos Previos
 
 - Node.js (versión 14 o superior)
-- npm o yarn
+- pnpm
 - Base de datos (PostgreSQL, MySQL, SQLite, etc.)
 
 ## 🛠️ Instalación
@@ -40,7 +40,7 @@ Una API REST simple para gestión de tareas construida con Node.js, Express y Kn
 2. **Instala las dependencias:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 ## ⚙️ Configuración
@@ -169,41 +169,46 @@ El proyecto está configurado para trabajar con múltiples tipos de base de dato
 
 ### Migraciones
 
+Las migraciones verifican automáticamente si la base de datos existe y la crean si es necesario.
+
 ```bash
 # Crear una nueva migración
-npx knex migrate:make migration_name
+pnpm exec knex migrate:make migration_name
 
-# Ejecutar migraciones
-npx knex migrate:latest
+# Ejecutar migraciones (crea la BD si no existe)
+pnpm migrate
 
 # Rollback migraciones
-npx knex migrate:rollback
+pnpm migrate:rollback
 ```
 
 ### Seeds
 
 ```bash
 # Crear un nuevo seed
-npx knex seed:make seed_name
+pnpm exec knex seed:make seed_name
 
 # Ejecutar seeds
-npx knex seed:run
+pnpm seed
 ```
 
 ## 📜 Scripts Disponibles
 
 ```bash
 # Iniciar la aplicación
-npm start
+pnpm start
 
-# Iniciar en modo desarrollo (si tienes nodemon)
-npm run dev
+# Iniciar en modo desarrollo
+pnpm dev
 
-# Ejecutar migraciones
-npm run migrate
+# Ejecutar migraciones (crea la BD si no existe)
+pnpm migrate
+
+# Rollback de migraciones
+pnpm migrate:rollback
 
 # Ejecutar seeds
-npm run seed
+pnpm seed
 ```
 
 ## 📁 Estructura del Proyecto
@@ -214,7 +219,9 @@ TaskAPI/
 ├── knexfile.js         # Configuración de Knex/Base de datos
 ├── .env                # Variables de entorno
 ├── package.json        # Dependencias y scripts
+├── pnpm-lock.yaml      # Lockfile de pnpm
 ├── README.md          # Este archivo
+├── scripts/           # Scripts auxiliares (init-db.js)
 ├── migrations/        # Migraciones de base de datos
 ├── seeds/            # Seeds de base de datos
 └── routes/           # Archivos de rutas

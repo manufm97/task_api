@@ -1,8 +1,10 @@
 {
+  "packageManager": "pnpm@11.9.0+sha512.bd682d5d03fe525ef7c9fd6780c6884d1e756ac4c9c9fe00c538782824310dcf90e3ddc4f53835f06dfaebd5085e41855e0bcbb3b60de2ac5bbab89e5036f03b",
   "dependencies": {
     "argon2": "^0.44.0",
     "dotenv": "^16.5.0",
     "express": "5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "knex": "^3.1.0",
     "lodash": "^4.17.21",
     "mysql2": "^3.14.1",
@@ -10,13 +12,9 @@
     "swagger-ui-express": "^5.0.1"
   },
   "scripts": {
-    "dev": "node --watch app.js"
-  },
-  "overrides": {
-    "swagger-jsdoc": {
-      "glob": "^10.3.10"
-    },
-    "lodash.get": "npm:lodash@^4.17.21",
-    "lodash.isequal": "npm:lodash@^4.17.21"
+    "dev": "node --watch app.js",
+    "migrate": "node scripts/init-db.js && knex migrate:latest && knex seed:run",
+    "migrate:rollback": "knex migrate:rollback",
+    "seed": "knex seed:run"
   }
 }

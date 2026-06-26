@@ -1,0 +1,7 @@
+allowBuilds:
+  argon2: true
+
+overrides:
+  "swagger-jsdoc>glob": "^10.3.10"
+  "lodash.get": "npm:lodash@^4.17.21"
+  "lodash.isequal": "npm:lodash@^4.17.21"

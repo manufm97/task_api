@@ -3,8 +3,13 @@ const router = express.Router();
 const db = require('../config/database');
 const crypto = require('crypto');
 const argon2 = require('argon2');
+const jwt = require('jsonwebtoken');
 
-let users = [];
+function mapUser(user) {
+	if (!user) return null;
+	const { password, created_at, updated_at, ...rest } = user;
+	return { ...rest, createdAt: created_at, updatedAt: updated_at };
+}
 
 /**
  * @swagger
@@ -108,44 +113,38 @@ let users = [];
  *                     totalPages:
  *                       type: integer
  */
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
 	try {
 		const page = parseInt(req.query.page) || 1;
 		const limit = parseInt(req.query.limit) || 10;
 		const active = req.query.active;
 
-		let filteredUsers = users;
+		let query = db('users');
+		let countQuery = db('users');
 
 		if (active !== undefined) {
 			const isActive = active === 'true';
-			filteredUsers = users.filter(user => user.active === isActive);
+			query = query.where('active', isActive);
+			countQuery = countQuery.where('active', isActive);
 		}
 
-		const startIndex = (page - 1) * limit;
-		const endIndex = startIndex + limit;
-		const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+		const [{ count }] = await countQuery.count('* as count');
+		const total = Number(count);
 
-		const total = filteredUsers.length;
-		const totalPages = Math.ceil(total / limit);
+		const rows = await query
+			.offset((page - 1) * limit)
+			.limit(limit)
+			.orderBy('created_at', 'desc');
 
-		const usersWithoutPassword = paginatedUsers.map(({ password, ...rest }) => rest);
+		const data = rows.map(mapUser);
 
 		res.status(200).json({
 			success: true,
-			data: usersWithoutPassword,
-			pagination: {
-				page,
-				limit,
-				total,
-				totalPages
-			}
+			data,
+			pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
 		});
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -188,31 +187,19 @@ router.get('/', (req, res) => {
  *                 message:
  *                   type: string
  */
-router.get('/:guid', (req, res) => {
+router.get('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
 
-		const user = users.find(u => u.id === guid);
+		const user = await db('users').where({ guid }).first();
 
 		if (!user) {
-			return res.status(404).json({
-				success: false,
-				message: 'Usuario no encontrado'
-			});
+			return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
 		}
 
-		const { password, ...userWithoutPassword } = user;
-
-		res.status(200).json({
-			success: true,
-			data: userWithoutPassword
-		});
+		res.status(200).json({ success: true, data: mapUser(user) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -277,44 +264,30 @@ router.post('/login', async (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		const user = users.find(u => u.email === email.trim().toLowerCase());
+		const user = await db('users').where({ email: email.trim().toLowerCase() }).first();
 
 		if (!user) {
-			return res.status(401).json({
-				success: false,
-				message: 'Credenciales inválidas'
-			});
+			return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
 		}
 
 		const validPassword = await argon2.verify(user.password, password);
 
 		if (!validPassword) {
-			return res.status(401).json({
-				success: false,
-				message: 'Credenciales inválidas'
-			});
+			return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
 		}
 
-		const { password: _, ...userWithoutPassword } = user;
+		const token = jwt.sign(
+			{ guid: user.guid, email: user.email },
+			process.env.JWT_SECRET,
+			{ expiresIn: '1h' }
+		);
 
-		res.status(200).json({
-			success: true,
-			message: 'Login exitoso',
-			data: userWithoutPassword
-		});
+		res.status(200).json({ success: true, message: 'Login exitoso', sessionToken: token, data: mapUser(user) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -446,43 +419,37 @@ router.post('/', async (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
 		const passwordHash = await argon2.hash(password);
+		const guid = crypto.randomUUID();
 
-		const newUser = {
-			id: crypto.randomUUID(),
+		await db('users').insert({
+			guid,
 			user_name: user_name.trim(),
 			first_name: first_name.trim(),
 			last_name_1: last_name_1.trim(),
-			last_name_2: last_name_2 ? last_name_2.trim() : '',
-			email: email.trim(),
+			last_name_2: last_name_2 ? last_name_2.trim() : null,
+			email: email.trim().toLowerCase(),
 			password: passwordHash,
 			active: active || false,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		};
+			created_at: db.fn.now(),
+			updated_at: db.fn.now(),
+		});
 
-		users.push(newUser);
-
-		const { password: _, ...userWithoutPassword } = newUser;
+		const user = await db('users').where({ guid }).first();
 
 		res.status(201).json({
 			success: true,
 			message: 'Usuario creado exitosamente',
-			data: userWithoutPassword
+			data: mapUser(user),
 		});
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		if (error.code === 'ER_DUP_ENTRY') {
+			return res.status(409).json({ success: false, message: 'El email o nombre de usuario ya existe' });
+		}
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -559,17 +526,13 @@ router.post('/', async (req, res) => {
 router.put('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
-
-		const userIndex = users.findIndex(u => u.id === guid);
-
-		if (userIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Usuario no encontrado'
-			});
-		}
-
 		const { user_name, first_name, last_name_1, last_name_2, email, password, active } = req.body;
+
+		const existing = await db('users').where({ guid }).first();
+
+		if (!existing) {
+			return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+		}
 
 		const errors = [];
 
@@ -606,40 +569,33 @@ router.put('/:guid', async (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		const passwordHash = password ? await argon2.hash(password) : users[userIndex].password;
-
-		users[userIndex] = {
-			...users[userIndex],
+		const updateData = {
 			user_name: user_name.trim(),
 			first_name: first_name.trim(),
 			last_name_1: last_name_1.trim(),
-			last_name_2: last_name_2 ? last_name_2.trim() : '',
-			email: email.trim(),
-			password: passwordHash,
-			active: active !== undefined ? active : users[userIndex].active,
-			updatedAt: new Date()
+			last_name_2: last_name_2 ? last_name_2.trim() : null,
+			email: email.trim().toLowerCase(),
+			active: active !== undefined ? active : existing.active,
+			updated_at: db.fn.now(),
 		};
 
-		const { password: _, ...userWithoutPassword } = users[userIndex];
+		if (password) {
+			updateData.password = await argon2.hash(password);
+		}
 
-		res.status(200).json({
-			success: true,
-			message: 'Usuario actualizado exitosamente',
-			data: userWithoutPassword
-		});
+		await db('users').where({ guid }).update(updateData);
+
+		const user = await db('users').where({ guid }).first();
+
+		res.status(200).json({ success: true, message: 'Usuario actualizado exitosamente', data: mapUser(user) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		if (error.code === 'ER_DUP_ENTRY') {
+			return res.status(409).json({ success: false, message: 'El email o nombre de usuario ya existe' });
+		}
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -699,17 +655,13 @@ router.put('/:guid', async (req, res) => {
 router.patch('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
-
-		const userIndex = users.findIndex(u => u.id === guid);
-
-		if (userIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Usuario no encontrado'
-			});
-		}
-
 		const { user_name, first_name, last_name_1, last_name_2, email, password, active } = req.body;
+
+		const existing = await db('users').where({ guid }).first();
+
+		if (!existing) {
+			return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+		}
 
 		const errors = [];
 
@@ -754,38 +706,29 @@ router.patch('/:guid', async (req, res) => {
 		}
 
 		if (errors.length > 0) {
-			return res.status(400).json({
-				success: false,
-				message: 'Datos inválidos',
-				errors
-			});
+			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
 
-		const updateData = { updatedAt: new Date() };
+		const updateData = { updated_at: db.fn.now() };
 
 		if (user_name !== undefined) updateData.user_name = user_name.trim();
 		if (first_name !== undefined) updateData.first_name = first_name.trim();
 		if (last_name_1 !== undefined) updateData.last_name_1 = last_name_1.trim();
 		if (last_name_2 !== undefined) updateData.last_name_2 = last_name_2.trim();
-		if (email !== undefined) updateData.email = email.trim();
+		if (email !== undefined) updateData.email = email.trim().toLowerCase();
 		if (password !== undefined) updateData.password = await argon2.hash(password);
 		if (active !== undefined) updateData.active = active;
 
-		users[userIndex] = { ...users[userIndex], ...updateData };
+		await db('users').where({ guid }).update(updateData);
 
-		const { password: _, ...userWithoutPassword } = users[userIndex];
+		const user = await db('users').where({ guid }).first();
 
-		res.status(200).json({
-			success: true,
-			message: 'Usuario actualizado exitosamente',
-			data: userWithoutPassword
-		});
+		res.status(200).json({ success: true, message: 'Usuario actualizado exitosamente', data: mapUser(user) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		if (error.code === 'ER_DUP_ENTRY') {
+			return res.status(409).json({ success: false, message: 'El email o nombre de usuario ya existe' });
+		}
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
@@ -821,32 +764,21 @@ router.patch('/:guid', async (req, res) => {
  *       400:
  *         description: GUID inválido
  */
-router.delete('/:guid', (req, res) => {
+router.delete('/:guid', async (req, res) => {
 	try {
 		const { guid } = req.params;
 
-		const userIndex = users.findIndex(u => u.id === guid);
+		const user = await db('users').where({ guid }).first();
 
-		if (userIndex === -1) {
-			return res.status(404).json({
-				success: false,
-				message: 'Usuario no encontrado'
-			});
+		if (!user) {
+			return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
 		}
 
-		const deletedUser = users.splice(userIndex, 1)[0];
+		await db('users').where({ guid }).del();
 
-		res.status(200).json({
-			success: true,
-			message: 'Usuario eliminado exitosamente',
-			data: deletedUser
-		});
+		res.status(200).json({ success: true, message: 'Usuario eliminado exitosamente', data: mapUser(user) });
 	} catch (error) {
-		res.status(500).json({
-			success: false,
-			message: 'Error interno del servidor',
-			error: error.message
-		});
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}
 });
 
