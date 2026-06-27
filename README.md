@@ -1,253 +1,219 @@
 # Task API
 
-Una API REST simple para gestión de tareas construida con Node.js, Express y Knex.js.
+Una API REST para gestión de tareas construida con Node.js, Express y Knex.js con MySQL/MariaDB.
 
-## 📋 Tabla de Contenidos
+## Tabla de Contenidos
 
-- [Características](#-características)
-- [Requisitos Previos](#-requisitos-previos)
-- [Instalación](#-instalación)
-- [Configuración](#-configuración)
-- [Uso](#-uso)
-- [Documentación de la API](#-documentación-de-la-api)
-- [Base de Datos](#-base-de-datos)
-- [Scripts Disponibles](#-scripts-disponibles)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
+- [Características](#características)
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Uso](#uso)
+- [Endpoints de la API](#endpoints-de-la-api)
+- [Base de Datos](#base-de-datos)
+- [Scripts](#scripts)
+- [Estructura del Proyecto](#estructura-del-proyecto)
 
-## ✨ Características
+## Características
 
-- 🔧 **Configuración con variables de entorno** usando archivos `.env`
-- 📚 **Documentación automática** con Swagger/OpenAPI 3.0
-- 🗄️ **Integración con base de datos** usando Knex.js
-- 🏥 **Health check endpoint** para monitoreo
-- 🛡️ **Configuración de seguridad** básica
-- 🌍 **Soporte multi-entorno** (development, staging, production)
+- CRUD RESTful para tareas y usuarios
+- Autenticación JWT con hashing de contraseñas argon2
+- Documentación interactiva de API con Swagger/OpenAPI 3.0 (en `/api-docs`)
+- Integración con base de datos MySQL/MariaDB mediante Knex.js
+- Soporte multi-entorno (development, staging, production)
+- Endpoint de health check (`/ping`)
+- Página de inicio estática con modo oscuro
+- Paginación y filtros
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
-- Node.js (versión 14 o superior)
+- Node.js 14+
 - pnpm
-- Base de datos (PostgreSQL, MySQL, SQLite, etc.)
+- Servidor MySQL o MariaDB
 
-## 🛠️ Instalación
+## Instalación
 
 1. **Clona el repositorio:**
 
    ```bash
    git clone <repository-url>
-   cd TaskAPI
+   cd task_api
    ```
 2. **Instala las dependencias:**
 
    ```bash
    pnpm install
    ```
+3. **Configura las variables de entorno:**
 
-## ⚙️ Configuración
+   Copia el archivo `.env` y ajusta los valores según sea necesario:
 
-### Variables de Entorno
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=taskapi_db
+   DB_USER=your_username
+   DB_PASSWORD=your_password
+   DB_DRIVER=mysql2
+   ENVIRONMENT=development
+   PORT=3000
+   JWT_SECRET=your_jwt_secret_key_here
+   API_KEY=your_api_key_here
+   ```
+4. **Inicializa la base de datos, ejecuta migraciones y siembra datos:**
 
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+   ```bash
+   pnpm migrate
+   ```
 
-```env
-# Database Connection Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=taskapi_db
-DB_USER=your_username
-DB_PASSWORD=your_password
-DB_DRIVER=postgresql
-
-# Alternative connection string format
-# DATABASE_URL=postgresql://username:password@localhost:5432/taskapi_db
-
-# Application Configuration
-ENVIRONMENT=development
-PORT=3000
-
-# Security
-JWT_SECRET=your_jwt_secret_key_here
-API_KEY=your_api_key_here
-```
-
-### Configuración de Base de Datos
-
-El proyecto incluye un `knexfile.js` configurado para usar las variables de entorno:
-
-- **Development**: Configuración local usando variables del `.env`
-- **Staging**: Configuración de pruebas
-- **Production**: Configuración optimizada para producción con soporte SSL
-
-## 🚀 Uso
+## Uso
 
 ### Iniciar el Servidor
 
 ```bash
+# Modo desarrollo (reinicio automático en cambios)
+pnpm dev
+
+# Modo producción
 node app.js
 ```
 
-Verás un mensaje similar a:
+El servidor arranca en `http://localhost:3000`. Swagger UI está disponible en `http://localhost:3000/api-docs`.
 
-```
-🚀 Server is running on http://localhost:3000
-📚 Swagger Documentation: http://localhost:3000/api-docs
-📊 Environment: development
-🗄️  Database: postgresql
-🔗 Database Host: localhost
-```
+## Endpoints de la API
 
-### Endpoints Disponibles
+### Tareas
 
-- **GET /** - Página de bienvenida
-- **GET /health** - Health check de la API
-- **GET /api-docs** - Documentación interactiva de Swagger
+| Método    | Endpoint             | Descripción                                               |
+| ---------- | -------------------- | ---------------------------------------------------------- |
+| `GET`    | `/api/tasks`       | Listar tareas (query:`page`, `limit`, `priority_id`) |
+| `GET`    | `/api/tasks/:guid` | Obtener una tarea por GUID                                 |
+| `POST`   | `/api/tasks`       | Crear una tarea (`title` requerido)                      |
+| `PUT`    | `/api/tasks/:guid` | Actualización completa de una tarea                       |
+| `PATCH`  | `/api/tasks/:guid` | Actualización parcial de una tarea                        |
+| `DELETE` | `/api/tasks/:guid` | Eliminar una tarea                                         |
 
-## 📚 Documentación de la API
+### Usuarios
 
-### Swagger UI
+| Método    | Endpoint             | Descripción                                            |
+| ---------- | -------------------- | ------------------------------------------------------- |
+| `GET`    | `/api/users`       | Listar usuarios (query:`page`, `limit`, `active`) |
+| `GET`    | `/api/users/:guid` | Obtener un usuario por GUID                             |
+| `POST`   | `/api/users`       | Registrar un usuario                                    |
+| `POST`   | `/api/users/login` | Iniciar sesión (devuelve token JWT)                    |
+| `PUT`    | `/api/users/:guid` | Actualización completa de un usuario                   |
+| `PATCH`  | `/api/users/:guid` | Actualización parcial de un usuario                    |
+| `DELETE` | `/api/users/:guid` | Eliminar un usuario                                     |
 
-La documentación interactiva de la API está disponible en:
+### Sistema
 
-```
-http://localhost:3000/api-docs
-```
+| Método | Endpoint        | Descripción                       |
+| ------- | --------------- | ---------------------------------- |
+| `GET` | `/`           | Página de inicio                  |
+| `GET` | `/ping`       | Health check                       |
+| `GET` | `/api/readme` | Devuelve este README como markdown |
+| `GET` | `/api-docs`   | Documentación Swagger UI          |
 
-### Health Check
+### Formato de Respuesta
 
-Para verificar el estado de la API:
-
-```bash
-curl http://localhost:3000/health
-```
-
-Respuesta:
+Todas las respuestas de la API siguen una estructura consistente:
 
 ```json
 {
-  "status": "OK",
-  "timestamp": "2023-06-17T15:22:46.000Z",
-  "environment": "development"
+  "success": true,
+  "message": "Operación exitosa",
+  "data": {},
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 42,
+    "totalPages": 5
+  }
 }
 ```
 
-### Agregar Documentación a Nuevas Rutas
+## Base de Datos
 
-Para documentar nuevos endpoints, usa comentarios JSDoc con anotaciones Swagger:
+El proyecto usa **Knex.js** como query builder y herramienta de migraciones con **MySQL/MariaDB**.
 
-```javascript
-/**
- * @swagger
- * /api/tasks:
- *   get:
- *     summary: Obtener todas las tareas
- *     description: Retorna una lista de todas las tareas
- *     responses:
- *       200:
- *         description: Lista de tareas exitosa
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Task'
- */
-app.get('/api/tasks', (req, res) => {
-  // Lógica del endpoint
-});
-```
+### Esquema
 
-## 🗄️ Base de Datos
+La base de datos incluye las siguientes tablas:
 
-### Configuración con Knex
-
-El proyecto está configurado para trabajar con múltiples tipos de base de datos:
-
-- **PostgreSQL** (por defecto)
-- **MySQL**
-- **SQLite**
-- **SQL Server**
+- `users` — Cuentas de usuario con información de perfil
+- `priorities` — Niveles de prioridad de tareas (Muy Baja a Urgente)
+- `statuses` — Estados de tarea (Creada, Asignada, En Progreso, Completada)
+- `tasks` — Tareas con título, descripción, timestamps y referencia a prioridad
+- `task_status_history` — Historial de cambios de estado de tareas
+- `task_comments` — Comentarios en tareas
+- `task_attachments` — Archivos adjuntos a tareas
 
 ### Migraciones
 
-Las migraciones verifican automáticamente si la base de datos existe y la crean si es necesario.
-
 ```bash
-# Crear una nueva migración
-pnpm exec knex migrate:make migration_name
-
 # Ejecutar migraciones (crea la BD si no existe)
 pnpm migrate
 
-# Rollback migraciones
+# Revertir el último lote de migraciones
 pnpm migrate:rollback
+
+# Crear una nueva migración
+pnpm exec knex migrate:make nombre_migracion
 ```
 
 ### Seeds
 
 ```bash
-# Crear un nuevo seed
-pnpm exec knex seed:make seed_name
-
-# Ejecutar seeds
+# Ejecutar todos los archivos seed
 pnpm seed
+
+# Crear un nuevo archivo seed
+pnpm exec knex seed:make nombre_seed
 ```
 
-## 📜 Scripts Disponibles
+## Scripts
 
-```bash
-# Iniciar la aplicación
-pnpm start
+| Comando                   | Descripción                                        |
+| ------------------------- | --------------------------------------------------- |
+| `pnpm dev`              | Iniciar en modo desarrollo con reinicio automático |
+| `pnpm migrate`          | Crear BD, ejecutar migraciones y sembrar datos      |
+| `pnpm migrate:rollback` | Revertir el último lote de migraciones             |
+| `pnpm seed`             | Re-ejecutar archivos seed                           |
 
-# Iniciar en modo desarrollo
-pnpm dev
-
-# Ejecutar migraciones (crea la BD si no existe)
-pnpm migrate
-
-# Rollback de migraciones
-pnpm migrate:rollback
-
-# Ejecutar seeds
-pnpm seed
-```
-
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
-TaskAPI/
-├── app.js              # Archivo principal de la aplicación
-├── knexfile.js         # Configuración de Knex/Base de datos
+task_api/
+├── app.js              # Punto de entrada de la aplicación Express
+├── knexfile.js         # Configuración de base de datos Knex
 ├── .env                # Variables de entorno
 ├── package.json        # Dependencias y scripts
-├── pnpm-lock.yaml      # Lockfile de pnpm
-├── README.md          # Este archivo
-├── scripts/           # Scripts auxiliares (init-db.js)
-├── migrations/        # Migraciones de base de datos
-├── seeds/            # Seeds de base de datos
-└── routes/           # Archivos de rutas
+├── config/
+│   └── database.js     # Fábrica de instancias Knex
+├── routes/
+│   ├── tasks.js        # Rutas CRUD de tareas con anotaciones Swagger
+│   └── users.js        # Rutas CRUD de usuarios y login con anotaciones Swagger
+├── migrations/         # Migraciones de base de datos
+├── seeds/              # Archivos seed (estados, prioridades)
+├── scripts/
+│   └── init-db.js      # Script de creación de base de datos
+├── pages/              # Archivos frontend estáticos
+│   ├── index.html      # Página de inicio
+│   ├── 404.html        # Página 404 personalizada
+│   ├── css/styles.css  # Estilos con soporte de modo oscuro
+│   └── js/index.js     # JavaScript del frontend
+└── .vscode/
+    └── settings.json   # Configuración de VS Code
 ```
 
-## 🔒 Seguridad
+## Contribuir
 
-- **Variables de entorno**: Nunca commitees el archivo `.env` al repositorio
-- **Secrets**: Usa gestores de secretos en producción
-- **SSL**: Configurado automáticamente en producción para bases de datos en la nube
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
+1. Haz un fork del proyecto
+2. Crea una rama para tu funcionalidad (`git checkout -b feature/AmazingFeature`)
+3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Haz push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📞 Soporte
+## Soporte
 
-Si tienes alguna pregunta o problema, puedes:
-
-- Crear un issue en GitHub
-- Contactar al equipo de soporte: support@taskapi.com
-
----
-
-**¡Desarrollado con ❤️ para la gestión eficiente de tareas!**
+Si tienes alguna pregunta o problema, por favor abre un issue en GitHub.
