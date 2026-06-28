@@ -29,6 +29,16 @@ const swaggerOptions = {
         description: `${ENVIRONMENT} server`,
       },
     ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
   },
   apis: ['./app.js', './routes/*.js'], // paths to files containing OpenAPI definitions
 }
@@ -53,6 +63,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs))
 // API routes
 app.use('/api/tasks', tasksRoutes)
 app.use('/api/users', usersRoutes)
+app.use('/api/profiles', require('./routes/profiles'))
+app.use('/api/permissions', require('./routes/permissions'))
 
 /**
  * @swagger
@@ -60,6 +72,7 @@ app.use('/api/users', usersRoutes)
  *   get:
  *     summary: Homepage
  *     description: Serves the TaskAPI homepage with Material Design interface
+ *     security: []
  *     responses:
  *       200:
  *         description: Successful response
@@ -79,6 +92,7 @@ app.get('/', (req, res) => {
  *   get:
  *     summary: Health check
  *     description: Returns the health status of the API
+ *     security: []
  *     responses:
  *       200:
  *         description: API is healthy
@@ -111,6 +125,7 @@ app.get('/ping', (req, res) => {
  *   get:
  *     summary: Get README markdown
  *     description: Returns the README.md file content as markdown
+ *     security: []
  *     responses:
  *       200:
  *         description: README content

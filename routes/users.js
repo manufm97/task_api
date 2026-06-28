@@ -4,6 +4,14 @@ const db = require('../config/database');
 const crypto = require('crypto');
 const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/auth');
+
+router.use((req, res, next) => {
+	if ((req.path === '/login' || req.path === '/') && req.method === 'POST') {
+		return next();
+	}
+	authMiddleware(req, res, next);
+});
 
 function mapUser(user) {
 	if (!user) return null;
@@ -210,6 +218,7 @@ router.get('/:guid', async (req, res) => {
  *     summary: Iniciar sesión
  *     description: Autentica un usuario con email y contraseña
  *     tags: [Users]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -342,6 +351,10 @@ router.post('/login', async (req, res) => {
  *                 type: boolean
  *                 default: false
  *                 description: Estado activo
+ *               profileGuid:
+ *                 type: string
+ *                 format: uuid
+ *                 description: GUID del perfil a asignar al usuario
  *             example:
  *               user_name: "john_doe"
  *               first_name: "John"
@@ -350,6 +363,7 @@ router.post('/login', async (req, res) => {
  *               email: "john.doe@example.com"
  *               password: "password123"
  *               active: true
+ *               profileGuid: "uuid-del-perfil"
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente
@@ -382,7 +396,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/', async (req, res) => {
 	try {
-		const { user_name, first_name, last_name_1, last_name_2, email, password, active } = req.body;
+		const { user_name, first_name, last_name_1, last_name_2, email, password, active, profileGuid } = req.body;
 
 		const errors = [];
 
@@ -418,6 +432,15 @@ router.post('/', async (req, res) => {
 			errors.push('La contraseña debe tener al menos 6 caracteres');
 		}
 
+		let profile = null;
+
+		if (profileGuid) {
+			profile = await db('profiles').where({ guid: profileGuid }).first();
+			if (!profile) {
+				errors.push('El perfil especificado no existe');
+			}
+		}
+
 		if (errors.length > 0) {
 			return res.status(400).json({ success: false, message: 'Datos inválidos', errors });
 		}
@@ -440,10 +463,24 @@ router.post('/', async (req, res) => {
 
 		const user = await db('users').where({ guid }).first();
 
+		if (profile) {
+			await db('user_profiles').insert({
+				user_id: user.id,
+				profile_id: profile.id,
+				created_at: db.fn.now(),
+				updated_at: db.fn.now(),
+			});
+		}
+
+		const userData = mapUser(user);
+		if (profile) {
+			userData.profile = { guid: profile.guid, name: profile.name, description: profile.description };
+		}
+
 		res.status(201).json({
 			success: true,
 			message: 'Usuario creado exitosamente',
-			data: mapUser(user),
+			data: userData,
 		});
 	} catch (error) {
 		if (error.code === 'ER_DUP_ENTRY') {
@@ -777,6 +814,82 @@ router.delete('/:guid', async (req, res) => {
 		await db('users').where({ guid }).del();
 
 		res.status(200).json({ success: true, message: 'Usuario eliminado exitosamente', data: mapUser(user) });
+	} catch (error) {
+		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
+	}
+});
+
+/**
+ * @swagger
+ * /api/users/{guid}/profile:
+ *   patch:
+ *     summary: Asignar perfil a un usuario
+ *     description: Asigna un perfil a un usuario específico
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: guid
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: GUID del usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - profileGuid
+ *             properties:
+ *               profileGuid:
+ *                 type: string
+ *                 format: uuid
+ *                 description: GUID del perfil a asignar
+ *     responses:
+ *       200:
+ *         description: Perfil asignado exitosamente
+ *       404:
+ *         description: Usuario o perfil no encontrado
+ *       400:
+ *         description: Datos inválidos
+ */
+router.patch('/:guid/profile', async (req, res) => {
+	try {
+		const { guid } = req.params;
+		const { profileGuid } = req.body;
+
+		if (!profileGuid) {
+			return res.status(400).json({ success: false, message: 'El GUID del perfil es obligatorio' });
+		}
+
+		const user = await db('users').where({ guid }).first();
+
+		if (!user) {
+			return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+		}
+
+		const profile = await db('profiles').where({ guid: profileGuid }).first();
+
+		if (!profile) {
+			return res.status(404).json({ success: false, message: 'Perfil no encontrado' });
+		}
+
+		const existing = await db('user_profiles').where({ user_id: user.id }).first();
+
+		if (existing) {
+			await db('user_profiles').where({ user_id: user.id }).update({ profile_id: profile.id, updated_at: db.fn.now() });
+		} else {
+			await db('user_profiles').insert({
+				user_id: user.id,
+				profile_id: profile.id,
+				created_at: db.fn.now(),
+				updated_at: db.fn.now(),
+			});
+		}
+
+		res.status(200).json({ success: true, message: 'Perfil asignado exitosamente' });
 	} catch (error) {
 		res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
 	}

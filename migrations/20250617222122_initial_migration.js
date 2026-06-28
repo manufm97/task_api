@@ -4,6 +4,14 @@
  */
 exports.up = function (knex) {
 	return knex.schema
+		.createTable('profiles', (table) => {
+			table.increments('id').primary();
+			table.string('guid').notNullable().unique();
+			table.string('description').notNullable();
+			table.timestamp('created_at').defaultTo(knex.fn.now());
+			table.timestamp('updated_at').defaultTo(knex.fn.now());
+		})
+
 		.createTable('users', (table) => {
 			table.increments('id').primary();
 			table.string('guid').notNullable().unique();
@@ -14,6 +22,14 @@ exports.up = function (knex) {
 			table.string('email').notNullable().unique();
 			table.string('password').notNullable();
 			table.boolean('active').defaultTo(false);
+			table.timestamp('created_at').defaultTo(knex.fn.now());
+			table.timestamp('updated_at').defaultTo(knex.fn.now());
+		})
+
+		.createTable('user_profiles', (table) => {
+			table.increments('id').primary();
+			table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
+			table.integer('profile_id').unsigned().references('id').inTable('profiles').onDelete('CASCADE');
 			table.timestamp('created_at').defaultTo(knex.fn.now());
 			table.timestamp('updated_at').defaultTo(knex.fn.now());
 		})

@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const crypto = require('crypto');
+const authMiddleware = require('../middleware/auth');
+
+router.use(authMiddleware);
 
 function mapTask(task) {
 	if (!task) return null;
